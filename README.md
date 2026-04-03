@@ -184,4 +184,4 @@ Your bookmarks persist across database updates — they're stored in localStorag
 
 ## Data Source
 
-Database dumps are provided by [r18.dev](https://r18.dev), which aggregates metadata from DMM/FANZA. This tool is a local viewer only — it does not scrape, download, or host any content.
+Database dumps are sourced from [r18.dev](https://r18.dev), which aggregates the metadata from DMM/FANZA. This tool is a local viewer only — it does not scrape, download, or host any content.
