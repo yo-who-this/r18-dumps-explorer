@@ -185,3 +185,15 @@ Your bookmarks persist across database updates — they're stored in localStorag
 ## Data Source
 
 Database dumps are sourced from [r18.dev](https://r18.dev), which aggregates the metadata from DMM/FANZA. This tool is a local viewer only — it does not scrape, download, or host any content.
+
+## Disclaimer
+
+This project is an independent, local-only viewer/converter for user-supplied database dumps.
+
+- This repository does **not** include, mirror, or redistribute any `r18.dev` data dumps.
+- Users must obtain any dump data themselves from the original source.
+- This project is **not affiliated with, endorsed by, or maintained by** `r18.dev`.
+- The tool is intended for **personal, local use only**.
+- If the upstream source changes its format, access, or terms, this project may stop working.
+
+If you are the maintainer of `r18.dev` and would like this repository modified or removed, please open an issue.
