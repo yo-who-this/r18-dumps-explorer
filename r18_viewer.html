@@ -179,6 +179,17 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:.72rem;font-f
 .detail-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem}
 .detail-gallery img{width:100%;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:border-color .15s,transform .15s}
 .detail-gallery img:hover{border-color:var(--accent);transform:scale(1.03)}
+.detail-jacket img{cursor:pointer}
+.lightbox{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;cursor:zoom-out}
+.lightbox.open{opacity:1;pointer-events:auto}
+.lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:8px;min-width:min(800px,90vw)}
+.lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:none;color:var(--text);font-size:2rem;padding:.5rem 1rem;cursor:pointer;border-radius:8px;transition:background .15s}
+.lightbox-nav:hover{background:rgba(255,255,255,.2)}
+.lightbox-prev{left:1rem}
+.lightbox-next{right:1rem}
+.lightbox-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer;font-family:'DM Mono',monospace;padding:.3rem .6rem}
+.lightbox-close:hover{color:var(--accent)}
+.lightbox-counter{position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)}
 </style></head><body>
 
 <div class="loading-overlay" id="loadingOverlay">
@@ -254,6 +265,13 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:.72rem;font-f
 </div>
 <div class="grid" id="grid"></div>
 <div class="empty-state" id="emptyState" hidden>No results match the current filters.</div>
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">&times;</button>
+  <button class="lightbox-nav lightbox-prev" id="lightboxPrev">&#8249;</button>
+  <img id="lightboxImg" src="" alt="Preview">
+  <button class="lightbox-nav lightbox-next" id="lightboxNext">&#8250;</button>
+  <div class="lightbox-counter" id="lightboxCounter"></div>
+</div>
 <div class="detail-overlay" id="detailOverlay"></div>
 <div class="detail-panel" id="detailPanel">
   <div class="detail-close">
@@ -1352,6 +1370,60 @@ detailBookmarkBtn.addEventListener('click', function() {
 detailOverlay.addEventListener('click', closeDetail);
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape' && detailPanel.classList.contains('open')) closeDetail();
+});
+
+// ── Lightbox ──
+var lightbox = document.getElementById('lightbox');
+var lightboxImg = document.getElementById('lightboxImg');
+var lightboxCounter = document.getElementById('lightboxCounter');
+var lightboxImages = [];
+var lightboxIndex = 0;
+
+function openLightbox(src, allImages) {
+  lightboxImages = allImages || [src];
+  lightboxIndex = Math.max(0, lightboxImages.indexOf(src));
+  showLightboxImage();
+  lightbox.classList.add('open');
+}
+
+function showLightboxImage() {
+  lightboxImg.src = lightboxImages[lightboxIndex];
+  lightboxCounter.textContent = lightboxImages.length > 1 ? (lightboxIndex + 1) + ' / ' + lightboxImages.length : '';
+  document.getElementById('lightboxPrev').style.display = lightboxImages.length > 1 ? '' : 'none';
+  document.getElementById('lightboxNext').style.display = lightboxImages.length > 1 ? '' : 'none';
+}
+
+function closeLightbox() {
+  lightbox.classList.remove('open');
+  lightboxImg.src = '';
+}
+
+document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', function(e) { if (e.target === lightbox) closeLightbox(); });
+document.getElementById('lightboxPrev').addEventListener('click', function(e) {
+  e.stopPropagation();
+  lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+  showLightboxImage();
+});
+document.getElementById('lightboxNext').addEventListener('click', function(e) {
+  e.stopPropagation();
+  lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+  showLightboxImage();
+});
+document.addEventListener('keydown', function(e) {
+  if (!lightbox.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  else if (e.key === 'ArrowLeft') { lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length; showLightboxImage(); }
+  else if (e.key === 'ArrowRight') { lightboxIndex = (lightboxIndex + 1) % lightboxImages.length; showLightboxImage(); }
+});
+
+// Image clicks in detail panel → lightbox
+detailBody.addEventListener('click', function(e) {
+  var img = e.target.closest('.detail-jacket img, .detail-gallery img');
+  if (!img) return;
+  // Collect all images in the detail panel
+  var allImgs = Array.from(detailBody.querySelectorAll('.detail-jacket img, .detail-gallery img')).map(function(i) { return i.src; }).filter(Boolean);
+  openLightbox(img.src, allImgs);
 });
 
 // Detail panel clicks → filter by value
