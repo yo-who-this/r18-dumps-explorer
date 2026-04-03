@@ -108,7 +108,7 @@ Autocomplete suggests matching codes, titles, and cast names as you type.
 ### Filtering, sorting, and layout options
 
 - **Content type** — toggle between **All Types**, **Live Action**, **Animated** (hentai/anime), and **Mainstream** (non-adult DVDs/Blu-rays that DMM also sells). Each shows its count.
-- **Series & Tags** — use the dropdown filters to narrow results. Both support multi-word search with a count footer.
+- **Series & Tags** — use the dropdown filters to narrow results. Both support multi-word search with a count footer. Counts update dynamically based on active filters — e.g. searching for a cast name then opening the tags dropdown shows only relevant tags with accurate counts.
 - **Sort** — by **Original order**, **Newest first**, **Code A-Z / Z-A**, or **Title A-Z**.
 - **Grid size** — switch between **Compact**, **Default**, and **Comfortable** layouts.
 

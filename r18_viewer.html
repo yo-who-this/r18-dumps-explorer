@@ -479,7 +479,11 @@ function esc(value) {
 }
 
 // ── SQL query builder ──
-function buildWhere() {
+function buildContextKey() {
+  return [state.filter, state.query, state.group, state.tag, state.contentType, favoritesOnly].join('|');
+}
+
+function buildWhere(exclude) {
   const clauses = [];
   const params = {};
 
@@ -496,7 +500,7 @@ function buildWhere() {
       params[':qw' + i] = w;
     });
   }
-  if (state.group !== 'all') {
+  if (exclude !== 'group' && state.group !== 'all') {
     if (state.group === '__none__') {
       clauses.push("(series_text IS NULL OR series_text = '')");
     } else {
@@ -504,7 +508,7 @@ function buildWhere() {
       params[':group'] = state.group;
     }
   }
-  if (state.tag !== 'all') {
+  if (exclude !== 'tag' && state.tag !== 'all') {
     clauses.push("(',' || REPLACE(tags_text, ', ', ',') || ',') LIKE '%,' || :tag || ',%'");
     params[':tag'] = state.tag;
   }
@@ -516,6 +520,55 @@ function buildWhere() {
     clauses.push("content_id LIKE '000_%'");
   }
   return { where: clauses.length ? ' WHERE ' + clauses.join(' AND ') : '', params };
+}
+
+// ── Dynamic counts for dropdowns ──
+var _dynTagCache = { key: '', data: null };
+var _dynSeriesCache = { key: '', data: null };
+
+function computeDynamicTagCounts() {
+  var key = buildContextKey().replace(/\|[^|]*\|([^|]*)$/, '|*|$1'); // exclude tag from key
+  if (_dynTagCache.key === key) return _dynTagCache.data;
+
+  var { where, params } = buildWhere('tag');
+  var sql = 'SELECT tags_text FROM video_search' + where + " AND tags_text IS NOT NULL AND tags_text != ''";
+  var stmt = db.prepare(sql);
+  stmt.bind(params);
+  var counts = {};
+  var totalMatched = 0;
+  while (stmt.step()) {
+    var tags = stmt.get()[0];
+    if (!tags) continue;
+    tags.split(', ').forEach(function(t) {
+      t = t.trim();
+      if (t) { counts[t] = (counts[t] || 0) + 1; totalMatched++; }
+    });
+  }
+  stmt.free();
+  _dynTagCache = { key: key, data: counts };
+  return counts;
+}
+
+function computeDynamicSeriesCounts() {
+  var key = buildContextKey().replace(/\|([^|]*)\|[^|]*\|/, '|*|$1|'); // exclude group from key
+  if (_dynSeriesCache.key === key) return _dynSeriesCache.data;
+
+  var { where, params } = buildWhere('group');
+  var sql = "SELECT series_text, COUNT(*) FROM video_search" + where + " AND series_text IS NOT NULL AND series_text != '' GROUP BY series_text";
+  var stmt = db.prepare(sql);
+  stmt.bind(params);
+  var counts = {};
+  while (stmt.step()) {
+    var row = stmt.get();
+    counts[row[0]] = row[1];
+  }
+  stmt.free();
+  _dynSeriesCache = { key: key, data: counts };
+  return counts;
+}
+
+function hasActiveFilters() {
+  return state.query || state.filter === '__new__' || state.group !== 'all' || state.tag !== 'all' || state.contentType !== 'all_types' || favoritesOnly;
 }
 
 function buildOrderBy() {
@@ -710,10 +763,22 @@ function loadGroupOptions() {
 
 function filterGroupOptions(query) {
   var opts = loadGroupOptions();
-  if (!query) return opts.slice(0, 50);
+  var dynCounts = hasActiveFilters() ? computeDynamicSeriesCounts() : null;
+
+  // Apply dynamic counts and filter out zero-count when filtered
+  var effective = opts.map(function(opt) {
+    if (opt.special) return opt;
+    var count = dynCounts ? (dynCounts[opt.value] || 0) : opt.count;
+    return { value: opt.value, label: opt.label, count: count, special: false };
+  });
+  if (dynCounts) {
+    effective = effective.filter(function(opt) { return opt.special || opt.count > 0; });
+  }
+
+  if (!query) return effective.slice(0, 50);
   var words = query.toLowerCase().split(/\s+/).filter(Boolean);
   var prefix = [], contains = [];
-  opts.forEach(function(opt) {
+  effective.forEach(function(opt) {
     if (opt.special) { prefix.unshift(opt); return; }
     var label = opt.label.toLowerCase();
     var allMatch = words.every(function(w) { return label.includes(w); });
@@ -732,13 +797,14 @@ function renderGroupSuggestions(query) {
     acHighlightIndex = -1;
     return;
   }
-  var totalOpts = loadGroupOptions().filter(function(o){return !o.special;}).length;
   var shownNonSpecial = filtered.filter(function(o){return !o.special;}).length;
+  var totalOpts = loadGroupOptions().filter(function(o){return !o.special;}).length;
+  var footerExtra = hasActiveFilters() ? ' (filtered)' : '';
   groupSuggestions.innerHTML = filtered.map(function(opt, i) {
     return '<div class="group-suggestion' + (opt.value === state.group ? ' active' : '') + (i === acHighlightIndex ? ' highlighted' : '') + '" data-value="' + esc(opt.value) + '">' +
       '<span>' + highlightMatch(opt.label, query) + '</span>' +
       '<span class="gs-count">' + opt.count.toLocaleString() + '</span></div>';
-  }).join('') + '<div class="ac-footer">Showing ' + shownNonSpecial.toLocaleString() + ' of ' + totalOpts.toLocaleString() + ' series \u2014 type to narrow</div>';
+  }).join('') + '<div class="ac-footer">Showing ' + shownNonSpecial.toLocaleString() + ' of ' + totalOpts.toLocaleString() + ' series' + footerExtra + ' \u2014 type to narrow</div>';
   groupSuggestions.hidden = false;
 }
 
@@ -798,10 +864,26 @@ function loadTagOptions() {
 
 function filterTagOptions(query) {
   var opts = loadTagOptions();
-  if (!query) return opts.slice(0, 50);
+  var dynCounts = hasActiveFilters() ? computeDynamicTagCounts() : null;
+
+  var effective = opts.map(function(opt) {
+    if (opt.special) return opt;
+    var count = dynCounts ? (dynCounts[opt.value] || 0) : opt.count;
+    return { value: opt.value, label: opt.label, count: count, special: false };
+  });
+  if (dynCounts) {
+    effective = effective.filter(function(opt) { return opt.special || opt.count > 0; });
+    // Re-sort by dynamic count descending
+    var specials = effective.filter(function(o) { return o.special; });
+    var rest = effective.filter(function(o) { return !o.special; });
+    rest.sort(function(a, b) { return b.count - a.count || a.label.localeCompare(b.label); });
+    effective = specials.concat(rest);
+  }
+
+  if (!query) return effective.slice(0, 50);
   var q = query.toLowerCase();
   var prefix = [], contains = [];
-  opts.forEach(function(opt) {
+  effective.forEach(function(opt) {
     if (opt.special) { prefix.unshift(opt); return; }
     var label = opt.label.toLowerCase();
     if (label.startsWith(q)) prefix.push(opt);
@@ -818,13 +900,14 @@ function renderTagSuggestions(query) {
     tagAcHighlight = -1;
     return;
   }
-  var totalTagOpts = loadTagOptions().filter(function(o){return !o.special;}).length;
   var shownTagNonSpecial = filtered.filter(function(o){return !o.special;}).length;
+  var totalTagOpts = loadTagOptions().filter(function(o){return !o.special;}).length;
+  var tagFooterExtra = hasActiveFilters() ? ' (filtered)' : '';
   tagSuggestionsEl.innerHTML = filtered.map(function(opt, i) {
     return '<div class="tag-suggestion' + (opt.value === state.tag ? ' active' : '') + (i === tagAcHighlight ? ' highlighted' : '') + '" data-value="' + esc(opt.value) + '">' +
       '<span>' + highlightMatch(opt.label, query) + '</span>' +
       '<span class="ts-count">' + opt.count.toLocaleString() + '</span></div>';
-  }).join('') + '<div class="ac-footer">Showing ' + shownTagNonSpecial.toLocaleString() + ' of ' + totalTagOpts.toLocaleString() + ' tags \u2014 type to narrow</div>';
+  }).join('') + '<div class="ac-footer">Showing ' + shownTagNonSpecial.toLocaleString() + ' of ' + totalTagOpts.toLocaleString() + ' tags' + tagFooterExtra + ' \u2014 type to narrow</div>';
   tagSuggestionsEl.hidden = false;
 }
 
