@@ -1,6 +1,6 @@
 # r18-dumps-explorer
 
-A local database explorer for browsing, searching, and bookmarking [r18.dev](https://r18.dev) database dumps in an organised HTML viewer — entirely offline, no server required.
+A local database explorer for browsing, searching, and bookmarking [r18.dev](https://r18.dev) database dumps in an organised HTML viewer — entirely local, no server required.
 
 ---
 
@@ -20,7 +20,7 @@ r18_data.db                           (optimised SQLite, ~2 GB)
 Browser                                (everything runs locally)
 ```
 
-No server, no internet connection needed after the initial setup. Just two files — a converter script and an HTML viewer.
+Just two files — a converter script and an HTML viewer.
 
 ---
 
