@@ -512,18 +512,20 @@ function buildAuxTables() {
   const seriesCount = db.prepare('SELECT COUNT(*) as c FROM series_count').get().c;
   console.log(`  ✓ series_count: ${seriesCount} series`);
 
-  // Cast index for autocomplete
-  console.log('  Building cast_index...');
+  // Cast counts for autocomplete (uses video_actress + actress before they're dropped)
+  console.log('  Building cast_count...');
   db.exec(`
-    CREATE TABLE cast_index (name TEXT PRIMARY KEY);
-    INSERT INTO cast_index
-    SELECT DISTINCT COALESCE(name_romaji, name_kanji, name_kana) AS name
-    FROM actress
-    WHERE COALESCE(name_romaji, name_kanji, name_kana) IS NOT NULL
-    ORDER BY name
+    CREATE TABLE cast_count (name TEXT PRIMARY KEY, cnt INTEGER);
+    INSERT INTO cast_count
+    SELECT COALESCE(a.name_romaji, a.name_kanji, a.name_kana) AS name, COUNT(DISTINCT va.content_id) AS cnt
+    FROM video_actress va
+    JOIN actress a ON va.actress_id = a.id
+    WHERE COALESCE(a.name_romaji, a.name_kanji, a.name_kana) IS NOT NULL
+    GROUP BY name
+    ORDER BY cnt DESC
   `);
-  const castCount = db.prepare('SELECT COUNT(*) as c FROM cast_index').get().c;
-  console.log(`  ✓ cast_index: ${castCount} names`);
+  const castCount = db.prepare('SELECT COUNT(*) as c FROM cast_count').get().c;
+  console.log(`  ✓ cast_count: ${castCount} names`);
 
   // Maker counts for potential filtering
   console.log('  Building maker_count...');

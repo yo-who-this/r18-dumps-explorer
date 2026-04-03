@@ -979,12 +979,12 @@ function getSearchAcSuggestions(query) {
 
   // Cast
   try {
-    var castStmt = db.prepare("SELECT name FROM cast_index WHERE LOWER(name) LIKE :q || '%' LIMIT 5");
+    var castStmt = db.prepare("SELECT name, cnt FROM cast_count WHERE LOWER(name) LIKE :q || '%' ORDER BY cnt DESC LIMIT 5");
     castStmt.bind({ ':q': q });
     var casts = [];
-    while (castStmt.step()) casts.push(castStmt.get()[0]);
+    while (castStmt.step()) { var cr = castStmt.get(); casts.push({ text: cr[0], count: cr[1] }); }
     castStmt.free();
-    if (casts.length) results.push({ label: 'Cast', items: casts });
+    if (casts.length) results.push({ label: 'Cast', items: casts.map(function(c) { return c.text + ' (' + c.count + ')'; }), raw: casts });
   } catch(e) {}
 
   return results;
@@ -1019,6 +1019,8 @@ function closeSearchAc() {
 }
 
 function selectSearchAcItem(value) {
+  // Strip count suffix like "Name (123)" → "Name"
+  value = value.replace(/\s*\(\d[\d,]*\)$/, '');
   searchInput.value = value;
   state.query = value.toLowerCase();
   state.page = 1;
@@ -1292,7 +1294,15 @@ function openDetail(row) {
     html += '<div class="detail-cast">';
     castMeta.value.split(', ').forEach(function(name) {
       name = name.trim();
-      if (name) html += '<span class="detail-cast-name detail-link" data-action="search" data-value="' + esc(name) + '">' + esc(name) + '</span>';
+      if (!name) return;
+      var cnt = '';
+      try {
+        var cs = db.prepare("SELECT cnt FROM cast_count WHERE name = ?");
+        cs.bind([name]);
+        if (cs.step()) cnt = ' <span style="opacity:.5">(' + cs.get()[0].toLocaleString() + ')</span>';
+        cs.free();
+      } catch(e) {}
+      html += '<span class="detail-cast-name detail-link" data-action="search" data-value="' + esc(name) + '">' + esc(name) + cnt + '</span>';
     });
     html += '</div>';
   }
