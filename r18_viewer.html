@@ -17,12 +17,19 @@ header h1{font-family:'DM Mono',monospace;font-size:1rem;letter-spacing:.15em;te
 .controls-row.has-group{grid-template-columns:minmax(280px,2.2fr) minmax(180px,.8fr) minmax(240px,2.2fr) minmax(300px,1.7fr)}
 .controls-row.no-group{grid-template-columns:minmax(280px,2.5fr) minmax(180px,.9fr) minmax(320px,1.8fr)}
 .controls-row > *{min-width:0}
-input#search,select#sort,select#groupFilter,input#jumpPage{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;color:var(--text);font-family:'DM Mono',monospace;font-size:.75rem;outline:none;transition:border-color .2s}
-input#search,select#sort,select#groupFilter{width:100%;max-width:none}
-select#groupFilter{min-width:0}
-input#search:focus,select#sort:focus,select#groupFilter:focus,input#jumpPage:focus{border-color:var(--accent)}
+input#search,input#jumpPage{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;color:var(--text);font-family:'DM Mono',monospace;font-size:.75rem;outline:none;transition:border-color .2s}
+input#search{width:100%;max-width:none}
+input#search:focus,input#jumpPage:focus{border-color:var(--accent)}
 input#search::placeholder{color:var(--muted)}
-select#sort,select#groupFilter{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6b80'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .7rem center;padding-right:2rem}
+.sort-autocomplete{position:relative;width:100%;min-width:0}
+#sortInput{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;padding-right:2rem;color:var(--accent);font-family:'DM Mono',monospace;font-size:.75rem;outline:none;transition:border-color .2s;width:100%;max-width:none;min-width:0;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6b80'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .7rem center}
+#sortInput:focus{border-color:var(--accent)}
+.sort-suggestions{position:absolute;top:calc(100% + 4px);left:0;right:0;background:rgba(42,43,41,.82);-webkit-backdrop-filter:blur(20px) saturate(140%);backdrop-filter:blur(20px) saturate(140%);border:1px solid rgba(255,255,255,.12);border-radius:8px;max-height:320px;overflow-y:auto;z-index:200;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.sort-suggestion{padding:.5rem .8rem;cursor:pointer;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text);transition:background .1s}
+.sort-suggestion:first-child{border-radius:8px 8px 0 0}
+.sort-suggestion:last-child{border-radius:0 0 8px 8px}
+.sort-suggestion:hover,.sort-suggestion.active{background:rgba(255,255,255,.08)}
+.sort-suggestion.active{color:var(--accent);font-weight:500}
 .group-autocomplete{position:relative;width:100%;min-width:0}
 #groupFilterInput{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;padding-right:2rem;color:var(--text);font-family:'DM Mono',monospace;font-size:.75rem;outline:none;transition:border-color .2s;width:100%;max-width:none;min-width:0}
 #groupFilterInput:focus{border-color:var(--accent)}
@@ -196,13 +203,10 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:.72rem;font-f
       <input id="search" type="text" placeholder="Search by code, title, cast, tags..." autocomplete="off">
       <div class="search-ac-dropdown" id="searchAcDropdown" hidden></div>
     </div>
-    <select id="sort">
-      <option value="default">Original order</option>
-      <option value="date-desc">Newest first</option>
-      <option value="code-asc">Code A-Z</option>
-      <option value="code-desc">Code Z-A</option>
-      <option value="title-asc">Title A-Z</option>
-    </select>
+    <div class="sort-autocomplete" id="sortAutocomplete">
+      <input id="sortInput" type="text" value="Original order" readonly placeholder="Sort by..." autocomplete="off" spellcheck="false">
+      <div class="sort-suggestions" id="sortSuggestions" hidden></div>
+    </div>
     <div class="group-autocomplete" id="groupAutocomplete">
       <input id="groupFilterInput" type="text" placeholder="All Series" autocomplete="off" spellcheck="false">
       <button class="group-clear" id="groupClearBtn" type="button" hidden>&times;</button>
@@ -411,7 +415,15 @@ document.getElementById('cntMainstream').textContent = '(' + mainstreamCount.toL
 
 // ── DOM refs ──
 const searchInput = document.getElementById('search');
-const sortSelect = document.getElementById('sort');
+const sortInput = document.getElementById('sortInput');
+const sortSuggestions = document.getElementById('sortSuggestions');
+const sortOptions = [
+  { value: 'default', label: 'Original order' },
+  { value: 'date-desc', label: 'Newest first' },
+  { value: 'code-asc', label: 'Code A\u2192Z' },
+  { value: 'code-desc', label: 'Code Z\u2192A' },
+  { value: 'title-asc', label: 'Title A\u2192Z' }
+];
 const groupAutoInput = document.getElementById('groupFilterInput');
 const groupSuggestions = document.getElementById('groupSuggestions');
 const groupClearBtn = document.getElementById('groupClearBtn');
@@ -965,11 +977,32 @@ searchAcDropdown.addEventListener('mousedown', function(e) {
 document.addEventListener('click', function(e) { if (!e.target.closest('#searchAcWrap')) closeSearchAc(); });
 
 // Sort
-sortSelect.addEventListener('change', function() {
-  state.sort = sortSelect.value;
+// Sort custom dropdown
+function renderSortSuggestions() {
+  sortSuggestions.innerHTML = sortOptions.map(function(opt) {
+    return '<div class="sort-suggestion' + (opt.value === state.sort ? ' active' : '') + '" data-value="' + esc(opt.value) + '">' + esc(opt.label) + '</div>';
+  }).join('');
+  sortSuggestions.hidden = false;
+}
+
+function selectSortOption(value) {
+  state.sort = value;
+  var opt = sortOptions.find(function(o) { return o.value === value; });
+  sortInput.value = opt ? opt.label : value;
+  sortSuggestions.hidden = true;
   state.page = 1;
   render();
+}
+
+sortInput.addEventListener('click', function() {
+  if (sortSuggestions.hidden) renderSortSuggestions();
+  else sortSuggestions.hidden = true;
 });
+sortSuggestions.addEventListener('mousedown', function(e) {
+  var item = e.target.closest('.sort-suggestion');
+  if (item) { e.preventDefault(); selectSortOption(item.dataset.value); }
+});
+document.addEventListener('click', function(e) { if (!e.target.closest('#sortAutocomplete')) sortSuggestions.hidden = true; });
 
 // Group autocomplete
 groupAutoInput.addEventListener('focus', function() {
