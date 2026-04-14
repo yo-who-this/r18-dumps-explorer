@@ -1,6 +1,8 @@
 #!/bin/bash
 # Mac/Linux setup script
 
+cd "$(dirname "$0")"
+
 echo ""
 echo "  r18-dumps-explorer setup"
 echo "  ========================"
@@ -23,17 +25,17 @@ if [ "$NODE_VER" -lt 18 ]; then
 fi
 echo "  [ok] Node.js $(node -v)"
 
-# Check/install better-sqlite3
-if npm list -g better-sqlite3 &>/dev/null; then
+# Check/install better-sqlite3 locally in this folder
+if [ -d "node_modules/better-sqlite3" ] || node -e "require.resolve('better-sqlite3')" >/dev/null 2>&1; then
     echo "  [ok] better-sqlite3 already installed"
 else
-    echo "  [ ] Installing better-sqlite3..."
-    npm install -g better-sqlite3 --silent 2>/dev/null
+    echo "  [ ] Installing better-sqlite3 in this folder..."
+    npm install better-sqlite3 --no-save --silent 2>/dev/null
     if [ $? -eq 0 ]; then
         echo "  [ok] better-sqlite3 installed"
     else
         echo "  [x] Failed to install better-sqlite3"
-        echo "      Try running: sudo npm install -g better-sqlite3"
+        echo "      Try running: npm install better-sqlite3 --no-save"
         echo ""
         exit 1
     fi

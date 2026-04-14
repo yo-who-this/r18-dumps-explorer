@@ -1,6 +1,7 @@
 @echo off
 :: Windows setup script
 setlocal enabledelayedexpansion
+cd /d "%~dp0"
 echo.
 echo   r18-dumps-explorer setup
 echo   ========================
@@ -26,18 +27,26 @@ if !errorlevel! neq 0 (
 )
 for /f %%v in ('node -v') do echo   [ok] Node.js %%v
 
-:: Check/install better-sqlite3
-npm list -g better-sqlite3 >nul 2>nul
-if !errorlevel! neq 0 goto :install_sqlite
-echo   [ok] better-sqlite3 already installed
-goto :check_dump
+:: Check/install better-sqlite3 locally in this folder
+if exist node_modules\better-sqlite3 (
+    echo   [ok] better-sqlite3 already installed
+    goto :check_dump
+)
+node -e "require.resolve('better-sqlite3'); process.exit(0)" >nul 2>nul
+if !errorlevel! equ 0 (
+    echo   [ok] better-sqlite3 already available
+    goto :check_dump
+)
+goto :install_sqlite
 
 :install_sqlite
-echo   [ ] Installing better-sqlite3...
-npm install -g better-sqlite3
+echo   [ ] Installing better-sqlite3 in this folder...
+npm install better-sqlite3 --no-save
 if !errorlevel! neq 0 (
     echo   [x] Failed to install better-sqlite3
-    echo       Try running as Administrator: npm install -g better-sqlite3
+    echo       Try running this in the same folder:
+    echo         npm install better-sqlite3 --no-save
+    echo       If that still fails, install Visual Studio Build Tools
     echo.
     pause
     exit /b 1
