@@ -1,4 +1,5 @@
 #!/bin/bash
+# Mac/Linux setup script
 
 echo ""
 echo "  r18-dumps-explorer setup"
