@@ -83,7 +83,7 @@ This takes about **1-2 minutes** depending on your machine. You'll see progress 
 
 Open `r18_viewer.html` directly in your browser (double-click or drag into browser). You'll see a drop zone:
 
-![Drop Zone](https://github.com/user-attachments/assets/5a021e65-ac21-4fee-afec-4915951c5d83)
+![Drop Zone](assets/Drop%20Zone.png)
 
 Drop the `r18_data.db` file onto it (or click "browse to select"). The database loads into memory and the viewer appears.
 
@@ -93,9 +93,9 @@ Drop the `r18_data.db` file onto it (or click "browse to select"). The database 
 
 ### Browse the full catalog
 
-Paginated grid view of all 1.8M+ entries with thumbnail images, codes, titles, and metadata (cast, tags, studio, label, series, director, release date, runtime). Navigate with Prev/Next buttons or jump to any page.
+Paginated grid view of all 1.8M+ entries with thumbnail images, codes, titles, and metadata (cast, tags, studio, label, series, director, release date, runtime). Navigate with Prev/Next buttons or jump to any page. Switch between **Grey** and **Dark** themes using the pill toggle — your preference is saved across sessions. Both themes retain the glassmorphic UI throughout.
 
-![Main Grid View](https://github.com/user-attachments/assets/d81c510a-c569-4023-8001-0ee7fcdee173)
+![Main Grid View](assets/Dark%20Mode.png)
 
 ### Multi-word search with autocomplete
 
@@ -103,7 +103,7 @@ Type in the search bar to find entries by code, title, cast, tags, or any metada
 
 Autocomplete suggests matching codes, titles, and cast names as you type.
 
-![Search Autocomplete](https://github.com/user-attachments/assets/e8a4a2a2-5b85-433b-89c0-ea55c9a1e01c)
+![Search Autocomplete](assets/Search%20Autocomplete.png)
 
 ### Filtering, sorting, and layout options
 
@@ -112,7 +112,7 @@ Autocomplete suggests matching codes, titles, and cast names as you type.
 - **Sort** — by **Original order**, **Newest first**, **Code A-Z / Z-A**, or **Title A-Z**.
 - **Grid size** — switch between **Compact**, **Default**, and **Comfortable** layouts.
 
-![Filtering, sorting, and layout options](https://github.com/user-attachments/assets/f73281ec-2f39-4d1f-b08d-2adc432da84a)
+![Filtering, sorting, and layout options](assets/Filter%20options.png)
 
 
 ### Detail panel
@@ -125,7 +125,7 @@ Click any card to open a slide-in detail panel showing:
 - Category pills
 - Gallery images
 
-![Detail Panel](https://github.com/user-attachments/assets/f49edae2-145a-4672-bb2d-cc1cddcaa15e)
+![Detail Panel](assets/Detail%20Panel.png)
 
 ### Clickable metadata for cross-filtering
 
