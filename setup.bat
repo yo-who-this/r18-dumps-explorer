@@ -1,4 +1,5 @@
 @echo off
+:: Windows setup script
 echo.
 echo   r18-dumps-explorer setup
 echo   ========================
