@@ -93,7 +93,7 @@ Drop the `r18_data.db` file onto it (or click "browse to select"). The database 
 
 ### Browse the full catalog
 
-Paginated grid view of all 1.8M+ entries with thumbnail images, codes, titles, and metadata (cast, tags, studio, label, series, director, release date, runtime). Navigate with Prev/Next buttons or jump to any page. Switch between **Grey** and **Dark** themes using the pill toggle — your preference is saved across sessions. Both themes retain the glassmorphic UI throughout.
+Paginated grid view of all 1.8M+ entries with thumbnail images, codes, titles, and metadata (cast, tags, studio, label, series, director, release date, runtime). Navigate with Prev/Next buttons or jump to any page. Switch between **Grey** and **Dark** themes using the pill toggle.
 
 ![Main Grid View](assets/Dark%20Mode.png)
 
