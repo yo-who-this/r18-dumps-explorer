@@ -33,7 +33,7 @@ Just two files — a converter script and an HTML viewer.
    - **Mac/Linux** — double-click `setup.sh` or run `./setup.sh` in terminal
    - **Windows** — double-click `setup.bat`
 
-The script checks for Node.js, installs the SQLite library if needed, and converts the dump into a ready-to-use database file.
+The script checks for Node.js, installs the SQLite library in this folder if needed, and converts the dump into a ready-to-use database file.
 
 3. Open `r18_viewer.html` in your browser and drop `r18_data.db` onto it
 
@@ -48,7 +48,7 @@ If you prefer to set things up yourself:
 **2. Install the SQLite library**
 
 ```bash
-npm install -g better-sqlite3
+npm install better-sqlite3 --no-save
 ```
 
 **3. Download the database dump** from [r18.dev/dumps](https://r18.dev/dumps) and place the `.sql.gz` file in this folder
@@ -62,6 +62,16 @@ node convert_pg_to_sqlite.js
 The script auto-detects the newest `.sql.gz` file, imports all tables, denormalises everything into a single searchable table, and outputs `r18_data.db`. Takes about **1-2 minutes**.
 
 **5. Open the viewer** — open `r18_viewer.html` in your browser and drop `r18_data.db` onto the drop zone
+
+### Python alternative (no dependencies)
+
+If you don't want to install Node.js or deal with npm, there's a Python version of the converter that uses only the standard library — no packages to install.
+
+```bash
+python convert_pg_to_sqlite.py
+```
+
+Works on Mac, Linux, and Windows. The output is identical to the Node.js version. It may be slightly slower (~2-3 minutes instead of ~1-2) but requires zero setup beyond having Python installed (which comes preinstalled on Mac and Linux).
 
 ---
 
