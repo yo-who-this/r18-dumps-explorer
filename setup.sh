@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mac/Linux setup script
+# Mac/Linux install script
 
 cd "$(dirname "$0")"
 
