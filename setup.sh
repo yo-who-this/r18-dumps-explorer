@@ -24,7 +24,7 @@ fi
 echo "  [ok] Node.js $(node -v)"
 
 # Check/install better-sqlite3
-if node -e "require('better-sqlite3')" 2>/dev/null; then
+if npm list -g better-sqlite3 &>/dev/null; then
     echo "  [ok] better-sqlite3 already installed"
 else
     echo "  [ ] Installing better-sqlite3..."
