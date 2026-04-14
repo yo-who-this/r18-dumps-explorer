@@ -41,7 +41,7 @@ goto :install_sqlite
 
 :install_sqlite
 echo   [ ] Installing better-sqlite3 in this folder...
-npm install better-sqlite3 --no-save
+call npm install better-sqlite3 --no-save
 if !errorlevel! neq 0 (
     echo   [x] Failed to install better-sqlite3
     echo       Try running this in the same folder:
