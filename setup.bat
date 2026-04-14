@@ -28,17 +28,17 @@ if %errorlevel% neq 0 (
 for /f %%v in ('node -v') do echo   [ok] Node.js %%v
 
 :: Check/install better-sqlite3
-node -e "require('better-sqlite3')" 2>nul
+npm list -g better-sqlite3 >nul 2>nul
 if %errorlevel% equ 0 (
     echo   [ok] better-sqlite3 already installed
 ) else (
     echo   [ ] Installing better-sqlite3...
-    npm install -g better-sqlite3 >nul 2>nul
+    npm install -g better-sqlite3
     if %errorlevel% equ 0 (
         echo   [ok] better-sqlite3 installed
     ) else (
         echo   [x] Failed to install better-sqlite3
-        echo       Try running: npm install -g better-sqlite3
+        echo       Try running as Administrator: npm install -g better-sqlite3
         echo.
         pause
         exit /b 1
