@@ -26,66 +26,42 @@ Just two files — a converter script and an HTML viewer.
 
 ## Setup
 
-### Step 1: Install Node.js
+### Quick setup (recommended)
 
-Download and install [Node.js](https://nodejs.org/) (v18 or later). Verify it's working:
+1. Download the latest database dump from [r18.dev/dumps](https://r18.dev/dumps) and place the `.sql.gz` file in this folder
+2. Run the setup script:
+   - **Mac/Linux** — double-click `setup.sh` or run `./setup.sh` in terminal
+   - **Windows** — double-click `setup.bat`
 
-```bash
-node --version
-```
+The script checks for Node.js, installs the SQLite library if needed, and converts the dump into a ready-to-use database file.
 
-### Step 2: Install the SQLite library
+3. Open `r18_viewer.html` in your browser and drop `r18_data.db` onto it
+
+![Drop Zone](assets/Drop%20Zone.png)
+
+### Manual setup
+
+If you prefer to set things up yourself:
+
+**1. Install Node.js** — download from [nodejs.org](https://nodejs.org/) (v18 or later)
+
+**2. Install the SQLite library**
 
 ```bash
 npm install -g better-sqlite3
 ```
 
-This installs the native SQLite bindings that the converter script uses. It's a one-time setup.
+**3. Download the database dump** from [r18.dev/dumps](https://r18.dev/dumps) and place the `.sql.gz` file in this folder
 
-### Step 3: Download the database dump
-
-Go to [r18.dev/dumps](https://r18.dev/dumps) and download the latest PostgreSQL dump. The file will be named something like:
-
-```
-r18dotdev_dump_2026-03-31.sql.gz
-```
-
-Place it in the **same folder** as `convert_pg_to_sqlite.js`.
-
-### Step 4: Run the converter
+**4. Run the converter**
 
 ```bash
 node convert_pg_to_sqlite.js
 ```
 
-The script will:
-1. Auto-detect the newest `.sql.gz` file in the folder
-2. Decompress it if needed
-3. Import all tables (videos, actresses, categories, studios, labels, series, directors, trailers)
-4. Denormalise everything into a single searchable table with pre-joined metadata
-5. Build auxiliary tables for autocomplete (tags, series, cast names)
-6. Output `r18_data.db`
+The script auto-detects the newest `.sql.gz` file, imports all tables, denormalises everything into a single searchable table, and outputs `r18_data.db`. Takes about **1-2 minutes**.
 
-This takes about **1-2 minutes** depending on your machine. You'll see progress logs:
-
-```
-=== Phase 1: Importing PG dump into SQLite ===
-  Importing video...
-  ✓ video: 1,854,013 rows
-  ...
-=== Phase 3: Building denormalized video_search table ===
-  ✓ video_search: 1,809,426 rows
-  ...
-=== Done in 75.2s ===
-```
-
-### Step 5: Open the viewer
-
-Open `r18_viewer.html` directly in your browser (double-click or drag into browser). You'll see a drop zone:
-
-![Drop Zone](assets/Drop%20Zone.png)
-
-Drop the `r18_data.db` file onto it (or click "browse to select"). The database loads into memory and the viewer appears.
+**5. Open the viewer** — open `r18_viewer.html` in your browser and drop `r18_data.db` onto the drop zone
 
 ---
 
