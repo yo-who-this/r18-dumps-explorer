@@ -1,5 +1,5 @@
 @echo off
-:: Windows setup script
+:: Windows install script
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 echo.
